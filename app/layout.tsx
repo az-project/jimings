@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -14,10 +14,61 @@ const jetbrains = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
+const SITE_URL = "https://www.jimings.com";
+const TITLE = "JIMINGS — 만들고, 배포합니다";
+const DESCRIPTION =
+  "앱과 웹 서비스를 만들어 직접 배포하는 메이커 JIMINGS의 제품 기록. 슥슥, 쿵치따치, oh-my-harness.";
+
 export const metadata: Metadata = {
-  title: "JIMINGS — 만들고, 배포합니다",
-  description:
-    "앱과 웹 서비스를 만들어 직접 배포하는 메이커 JIMINGS의 제품 기록. 슥슥, 쿵치따치, oh-my-harness.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    template: "%s — JIMINGS",
+  },
+  description: DESCRIPTION,
+  applicationName: "JIMINGS",
+  keywords: [
+    "JIMINGS",
+    "지밍스",
+    "포트폴리오",
+    "인디 메이커",
+    "개발자 포트폴리오",
+    "슥슥",
+    "쿵치따치",
+    "oh-my-harness",
+  ],
+  authors: [{ name: "JIMINGS" }],
+  creator: "JIMINGS",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: SITE_URL,
+    siteName: "JIMINGS",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+    },
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f7f7f5",
+  colorScheme: "light",
 };
 
 export default function RootLayout({

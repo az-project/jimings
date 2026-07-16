@@ -1,9 +1,35 @@
 import Scene from "@/components/Scene";
 import { projects } from "@/lib/projects";
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  mainEntity: {
+    "@type": "Person",
+    name: "JIMINGS",
+    url: "https://www.jimings.com",
+    email: "support.jimings@gmail.com",
+    jobTitle: "Indie maker",
+    description:
+      "앱과 웹 서비스를 만들어 직접 배포하는 메이커. 슥슥, 쿵치따치, oh-my-harness.",
+    makesOffer: projects.map((p) => ({
+      "@type": "Offer",
+      itemOffered: {
+        "@type": "SoftwareApplication",
+        name: p.name,
+        description: p.tagline,
+      },
+    })),
+  },
+};
+
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Scene />
 
       <header className="siteHeader">
@@ -64,8 +90,8 @@ export default function Home() {
             <br />
             언제든지.
           </h2>
-          <a className="email" href="mailto:pb1123love@gmail.com">
-            pb1123love@gmail.com
+          <a className="email" href="mailto:support.jimings@gmail.com">
+            support.jimings@gmail.com
           </a>
           <p className="note">새 제품은 이 페이지에 계속 추가됩니다.</p>
         </section>
