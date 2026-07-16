@@ -13,8 +13,7 @@ export const MUTE = "#9aa0a8";
 
 const inkMat = { color: "#262b34", roughness: 0.32, metalness: 0.1 };
 const accentMat = { color: ACCENT, roughness: 0.28, metalness: 0.05 };
-const paperMat = { color: "#eeeeea", roughness: 0.68, metalness: 0.0 };
-const lineMat = { color: "#c6c6c0", roughness: 0.7, metalness: 0.0 };
+const paperMat = { color: "#f4f4f1", roughness: 0.68, metalness: 0.0 };
 
 /** 히어로: 쌓아 올린 세 장의 슬래브 — 커서를 따라 부채꼴로 기울어진다. */
 export function HeroStack({ reducedMotion }: { reducedMotion: boolean }) {
@@ -55,24 +54,19 @@ function SignPaper({ reducedMotion }: { reducedMotion: boolean }) {
   const group = useRef<THREE.Group>(null);
   const pen = useRef<THREE.Group>(null);
   // 종이 앞면(z+) 위에 놓이는 서명선. 종이 로컬 좌표계 기준.
+  // 빈 종이 한가운데를 가로지르는 서명.
   const sig = useMemo(
     () =>
       new THREE.CatmullRomCurve3([
-        new THREE.Vector3(-0.5, -0.58, 0.045),
-        new THREE.Vector3(-0.24, -0.4, 0.045),
-        new THREE.Vector3(-0.02, -0.62, 0.045),
-        new THREE.Vector3(0.22, -0.36, 0.045),
-        new THREE.Vector3(0.42, -0.56, 0.045),
-        new THREE.Vector3(0.56, -0.44, 0.045),
+        new THREE.Vector3(-0.58, -0.12, 0.045),
+        new THREE.Vector3(-0.28, 0.14, 0.045),
+        new THREE.Vector3(-0.02, -0.2, 0.045),
+        new THREE.Vector3(0.24, 0.12, 0.045),
+        new THREE.Vector3(0.46, -0.16, 0.045),
+        new THREE.Vector3(0.62, 0.0, 0.045),
       ]),
     []
   );
-  const lines = [
-    { y: 0.62, w: 0.62, x: -0.28 },
-    { y: 0.42, w: 1.0, x: 0 },
-    { y: 0.22, w: 1.0, x: 0 },
-    { y: 0.02, w: 0.78, x: -0.11 },
-  ];
   useFrame((state) => {
     const g = group.current;
     if (!g || reducedMotion) return;
@@ -89,17 +83,6 @@ function SignPaper({ reducedMotion }: { reducedMotion: boolean }) {
       <RoundedBox args={[1.4, 1.9, 0.06]} radius={0.05} smoothness={3}>
         <meshStandardMaterial {...paperMat} />
       </RoundedBox>
-      {lines.map((l, i) => (
-        <RoundedBox
-          key={i}
-          args={[l.w, 0.07, 0.02]}
-          radius={0.03}
-          smoothness={2}
-          position={[l.x, l.y, 0.035]}
-        >
-          <meshStandardMaterial {...lineMat} />
-        </RoundedBox>
-      ))}
       <mesh>
         <tubeGeometry args={[sig, 96, 0.024, 8, false]} />
         <meshStandardMaterial {...accentMat} />
