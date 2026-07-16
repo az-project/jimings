@@ -53,7 +53,7 @@ export function HeroStack({ reducedMotion }: { reducedMotion: boolean }) {
 /** 슥슥: 문서 위에 서명이 슥슥 그어지는 종이 — 펜촉(액센트 점)이 서명선을 따라 움직인다. */
 function SignPaper({ reducedMotion }: { reducedMotion: boolean }) {
   const group = useRef<THREE.Group>(null);
-  const nib = useRef<THREE.Mesh>(null);
+  const pen = useRef<THREE.Group>(null);
   // 종이 앞면(z+) 위에 놓이는 서명선. 종이 로컬 좌표계 기준.
   const sig = useMemo(
     () =>
@@ -79,9 +79,9 @@ function SignPaper({ reducedMotion }: { reducedMotion: boolean }) {
     const t = state.clock.elapsedTime;
     g.rotation.y = -0.32 + Math.sin(t * 0.4) * 0.12;
     g.position.y = Math.sin(t * 0.7) * 0.05;
-    if (nib.current) {
-      const p = sig.getPointAt((t * 0.22) % 1);
-      nib.current.position.set(p.x, p.y, p.z + 0.02);
+    if (pen.current) {
+      const p = sig.getPointAt((t * 0.18) % 1);
+      pen.current.position.set(p.x, p.y + 0.02, p.z + 0.03);
     }
   });
   return (
@@ -101,13 +101,32 @@ function SignPaper({ reducedMotion }: { reducedMotion: boolean }) {
         </RoundedBox>
       ))}
       <mesh>
-        <tubeGeometry args={[sig, 96, 0.03, 8, false]} />
+        <tubeGeometry args={[sig, 96, 0.024, 8, false]} />
         <meshStandardMaterial {...accentMat} />
       </mesh>
-      <mesh ref={nib}>
-        <sphereGeometry args={[0.055, 16, 16]} />
-        <meshStandardMaterial {...accentMat} />
-      </mesh>
+      {/* 서명선을 따라 슥슥 그어지는 펜 */}
+      <group ref={pen} rotation={[0.4, 0, -0.72]}>
+        {/* 펜촉 */}
+        <mesh position={[0, 0.1, 0]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.05, 0.2, 20]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+        {/* 배럴 */}
+        <mesh position={[0, 0.85, 0]}>
+          <cylinderGeometry args={[0.06, 0.06, 1.3, 24]} />
+          <meshStandardMaterial {...accentMat} />
+        </mesh>
+        {/* 상단 캡 */}
+        <mesh position={[0, 1.58, 0]}>
+          <cylinderGeometry args={[0.065, 0.065, 0.16, 24]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+        {/* 클립 */}
+        <mesh position={[0.075, 1.42, 0]}>
+          <boxGeometry args={[0.022, 0.3, 0.05]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+      </group>
     </group>
   );
 }
