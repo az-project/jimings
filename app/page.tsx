@@ -1,66 +1,77 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Scene from "@/components/Scene";
+import { projects } from "@/lib/projects";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <Scene />
+
+      <header className="siteHeader">
+        <a href="#top" className="wordmark">
+          JIMINGS
+        </a>
+        <nav>
+          <a href={`#${projects[0].id}`}>제품</a>
+          <a href="#contact">연락</a>
+        </nav>
+      </header>
+
+      <main className="content" id="top">
+        <section className="panel hero">
+          <p className="eyebrow">Indie maker · Shipping log</p>
+          <h1>JIMINGS</h1>
+          <p className="lede">
+            앱과 웹 서비스를 만들어 직접 배포합니다. 아래는 지금까지 세상에
+            내보낸 제품들입니다.
           </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          <p className="scrollHint">SCROLL ↓</p>
+        </section>
+
+        {projects.map((p, i) => (
+          <section
+            key={p.id}
+            id={p.id}
+            className={`panel project${i % 2 === 0 ? "" : " flip"}`}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
+            <div className="projectCard">
+              <div className="meta">
+                <span className="status">{p.status}</span>
+                {p.stack.map((s) => (
+                  <span key={s}>{s}</span>
+                ))}
+              </div>
+              <h2>{p.name}</h2>
+              <p className="tagline">{p.tagline}</p>
+              <p className="desc">{p.description}</p>
+              {p.href && (
+                <a
+                  className="visit"
+                  href={p.href}
+                  target={p.href.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer"
+                >
+                  제품 보러 가기 →
+                </a>
+              )}
+            </div>
+          </section>
+        ))}
+
+        <section className="panel contact" id="contact">
+          <p className="eyebrow">Contact</p>
+          <h2>
+            함께 만들 것이 있다면,
+            <br />
+            언제든지.
+          </h2>
+          <a className="email" href="mailto:pb1123love@gmail.com">
+            pb1123love@gmail.com
           </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <p className="note">새 제품은 이 페이지에 계속 추가됩니다.</p>
+        </section>
+
+        <footer className="siteFooter">© 2026 JIMINGS</footer>
       </main>
-    </div>
+    </>
   );
 }
