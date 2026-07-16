@@ -20,6 +20,54 @@ function smoothstep(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/** 아티팩트 i가 화면 중앙에 오는 스크롤 진행도(0~1). */
+function centerProgress(i: number): number {
+  return (i + 1) / (projects.length + 1);
+}
+
+/**
+ * 스크롤이 해당 아티팩트에 가까워질 때 커지며 떠오르는 진입 연출.
+ * 안쪽 그룹만 변형하고 바깥 그룹은 고정 좌표를 유지한다.
+ */
+function RevealGroup({
+  center,
+  position,
+  baseScale,
+  reducedMotion,
+  children,
+}: {
+  center: number;
+  position: THREE.Vector3;
+  baseScale: number;
+  reducedMotion: boolean;
+  children: React.ReactNode;
+}) {
+  const inner = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    const g = inner.current;
+    if (!g) return;
+    let reveal = 1;
+    if (!reducedMotion) {
+      const d = Math.abs(scrollState.progress - center);
+      reveal = smoothstep(THREE.MathUtils.clamp(1 - d / 0.22, 0, 1));
+    }
+    const s = THREE.MathUtils.damp(
+      g.scale.x,
+      baseScale * (0.34 + 0.66 * reveal),
+      5,
+      delta
+    );
+    g.scale.setScalar(s);
+    g.position.y = THREE.MathUtils.damp(g.position.y, (1 - reveal) * -0.9, 5, delta);
+    g.rotation.z = THREE.MathUtils.damp(g.rotation.z, (1 - reveal) * 0.3, 5, delta);
+  });
+  return (
+    <group position={position}>
+      <group ref={inner}>{children}</group>
+    </group>
+  );
+}
+
 function CameraRig({
   lateral,
   reducedMotion,
@@ -75,6 +123,9 @@ function CameraRig({
     lc.x = THREE.MathUtils.damp(lc.x, targetLook.x, lambda, delta);
     lc.y = THREE.MathUtils.damp(lc.y, targetLook.y, lambda, delta);
     lc.z = THREE.MathUtils.damp(lc.z, targetLook.z, lambda, delta);
+    // 커서에 따라 살짝 기우는 뱅킹(roll)으로 이동감을 준다.
+    const roll = reducedMotion ? 0 : pointerState.x * 0.04;
+    camera.up.set(Math.sin(roll), Math.cos(roll), 0);
     camera.lookAt(lc);
   });
   return null;
@@ -100,14 +151,17 @@ function World({ reducedMotion }: { reducedMotion: boolean }) {
       >
         <HeroStack reducedMotion={reducedMotion} />
       </group>
-      {projects.map((p, i) => {
-        const pos = artifactPosition(i, lateral);
-        return (
-          <group key={p.id} position={pos} scale={scale * 0.85}>
-            <Artifact kind={p.artifact} reducedMotion={reducedMotion} />
-          </group>
-        );
-      })}
+      {projects.map((p, i) => (
+        <RevealGroup
+          key={p.id}
+          center={centerProgress(i)}
+          position={artifactPosition(i, lateral)}
+          baseScale={scale * 0.85}
+          reducedMotion={reducedMotion}
+        >
+          <Artifact kind={p.artifact} reducedMotion={reducedMotion} />
+        </RevealGroup>
+      ))}
       <CameraRig lateral={lateral} reducedMotion={reducedMotion} />
     </>
   );

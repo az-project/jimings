@@ -13,6 +13,8 @@ export const MUTE = "#9aa0a8";
 
 const inkMat = { color: "#262b34", roughness: 0.32, metalness: 0.1 };
 const accentMat = { color: ACCENT, roughness: 0.28, metalness: 0.05 };
+const paperMat = { color: "#eeeeea", roughness: 0.68, metalness: 0.0 };
+const lineMat = { color: "#c6c6c0", roughness: 0.7, metalness: 0.0 };
 
 /** 히어로: 쌓아 올린 세 장의 슬래브 — 커서를 따라 부채꼴로 기울어진다. */
 export function HeroStack({ reducedMotion }: { reducedMotion: boolean }) {
@@ -48,70 +50,209 @@ export function HeroStack({ reducedMotion }: { reducedMotion: boolean }) {
   );
 }
 
-/** 슥슥: 서명 궤적을 따라 흐르는 리본. */
-function Ribbon({ reducedMotion }: { reducedMotion: boolean }) {
-  const mesh = useRef<THREE.Mesh>(null);
-  const tip = useRef<THREE.Mesh>(null);
-  const curve = useMemo(() => {
-    return new THREE.CatmullRomCurve3([
-      new THREE.Vector3(-1.7, -0.35, 0),
-      new THREE.Vector3(-0.9, 0.55, 0.25),
-      new THREE.Vector3(-0.05, -0.55, -0.2),
-      new THREE.Vector3(0.75, 0.6, 0.15),
-      new THREE.Vector3(1.45, -0.15, -0.1),
-      new THREE.Vector3(1.85, 0.35, 0),
-    ]);
-  }, []);
+/** 슥슥: 문서 위에 서명이 슥슥 그어지는 종이 — 펜촉(액센트 점)이 서명선을 따라 움직인다. */
+function SignPaper({ reducedMotion }: { reducedMotion: boolean }) {
+  const group = useRef<THREE.Group>(null);
+  const nib = useRef<THREE.Mesh>(null);
+  // 종이 앞면(z+) 위에 놓이는 서명선. 종이 로컬 좌표계 기준.
+  const sig = useMemo(
+    () =>
+      new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-0.5, -0.58, 0.045),
+        new THREE.Vector3(-0.24, -0.4, 0.045),
+        new THREE.Vector3(-0.02, -0.62, 0.045),
+        new THREE.Vector3(0.22, -0.36, 0.045),
+        new THREE.Vector3(0.42, -0.56, 0.045),
+        new THREE.Vector3(0.56, -0.44, 0.045),
+      ]),
+    []
+  );
+  const lines = [
+    { y: 0.62, w: 0.62, x: -0.28 },
+    { y: 0.42, w: 1.0, x: 0 },
+    { y: 0.22, w: 1.0, x: 0 },
+    { y: 0.02, w: 0.78, x: -0.11 },
+  ];
   useFrame((state) => {
-    if (reducedMotion) return;
+    const g = group.current;
+    if (!g || reducedMotion) return;
     const t = state.clock.elapsedTime;
-    if (mesh.current) mesh.current.rotation.y = Math.sin(t * 0.35) * 0.3;
-    if (tip.current) {
-      const p = curve.getPointAt((t * 0.08) % 1);
-      tip.current.position.set(p.x, p.y, p.z);
+    g.rotation.y = -0.32 + Math.sin(t * 0.4) * 0.12;
+    g.position.y = Math.sin(t * 0.7) * 0.05;
+    if (nib.current) {
+      const p = sig.getPointAt((t * 0.22) % 1);
+      nib.current.position.set(p.x, p.y, p.z + 0.02);
     }
   });
   return (
-    <group>
-      <mesh ref={mesh}>
-        <tubeGeometry args={[curve, 128, 0.07, 12, false]} />
-        <meshStandardMaterial {...inkMat} />
+    <group ref={group} rotation={[-0.1, -0.32, 0.04]}>
+      <RoundedBox args={[1.4, 1.9, 0.06]} radius={0.05} smoothness={3}>
+        <meshStandardMaterial {...paperMat} />
+      </RoundedBox>
+      {lines.map((l, i) => (
+        <RoundedBox
+          key={i}
+          args={[l.w, 0.07, 0.02]}
+          radius={0.03}
+          smoothness={2}
+          position={[l.x, l.y, 0.035]}
+        >
+          <meshStandardMaterial {...lineMat} />
+        </RoundedBox>
+      ))}
+      <mesh>
+        <tubeGeometry args={[sig, 96, 0.03, 8, false]} />
+        <meshStandardMaterial {...accentMat} />
       </mesh>
-      <mesh ref={tip}>
-        <sphereGeometry args={[0.14, 24, 24]} />
+      <mesh ref={nib}>
+        <sphereGeometry args={[0.055, 16, 16]} />
         <meshStandardMaterial {...accentMat} />
       </mesh>
     </group>
   );
 }
 
-/** 쿵치따치: 비트가 도는 12개 구 링 — 1박은 액센트. */
-function Rhythm({ reducedMotion }: { reducedMotion: boolean }) {
+/** HuDy: 공휴일 캘린더 그리드 — 휴일 셀은 액센트, 다음 휴일 한 칸은 D-day처럼 박동한다. */
+function Calendar({ reducedMotion }: { reducedMotion: boolean }) {
   const group = useRef<THREE.Group>(null);
-  const COUNT = 12;
-  const BPM = 100;
-  useFrame((state) => {
+  const COLS = 5;
+  const ROWS = 4;
+  const GAP = 0.44;
+  const CELL = 0.32;
+  // 휴일 셀 인덱스와, 그중 박동하는 "다음 휴일" 한 칸.
+  const holidays = useMemo(() => new Set([2, 7, 13, 18]), []);
+  const nextHoliday = 7;
+  useFrame((state, delta) => {
     const g = group.current;
-    if (!g || reducedMotion) return;
-    const beat = (state.clock.elapsedTime * BPM) / 60;
-    g.rotation.z = Math.sin(state.clock.elapsedTime * 0.25) * 0.15;
-    g.children.forEach((child, i) => {
-      const phase = ((beat - i / COUNT) % 1 + 1) % 1;
-      const pulse = Math.max(0, 1 - phase * 3);
-      child.scale.setScalar(1 + pulse * 0.9);
+    if (!g) return;
+    if (!reducedMotion) {
+      g.rotation.y = -0.5 + Math.sin(state.clock.elapsedTime * 0.4) * 0.18;
+      g.position.y = Math.sin(state.clock.elapsedTime * 0.7) * 0.06;
+    }
+    const t = state.clock.elapsedTime;
+    g.children.forEach((child, idx) => {
+      const mesh = child as THREE.Mesh;
+      let targetZ = holidays.has(idx) ? 0.18 : 0;
+      let targetScale = 1;
+      if (idx === nextHoliday && !reducedMotion) {
+        const pulse = (Math.sin(t * 2.2) + 1) / 2;
+        targetZ = 0.24 + pulse * 0.22;
+        targetScale = 1 + pulse * 0.25;
+      }
+      mesh.position.z = THREE.MathUtils.damp(mesh.position.z, targetZ, 6, delta);
+      const s = THREE.MathUtils.damp(mesh.scale.x, targetScale, 6, delta);
+      mesh.scale.setScalar(s);
     });
   });
   return (
-    <group ref={group} rotation={[0.35, 0, 0]}>
-      {Array.from({ length: COUNT }, (_, i) => {
-        const a = (i / COUNT) * Math.PI * 2;
+    <group ref={group} rotation={[-0.32, -0.5, 0]}>
+      {Array.from({ length: COLS * ROWS }, (_, i) => {
+        const c = i % COLS;
+        const r = Math.floor(i / COLS);
+        const x = (c - (COLS - 1) / 2) * GAP;
+        const y = ((ROWS - 1) / 2 - r) * GAP;
+        const isHoliday = holidays.has(i);
         return (
-          <mesh key={i} position={[Math.cos(a) * 1.25, Math.sin(a) * 1.25, 0]}>
-            <sphereGeometry args={[0.14, 20, 20]} />
-            <meshStandardMaterial {...(i === 0 ? accentMat : inkMat)} />
-          </mesh>
+          <RoundedBox
+            key={i}
+            args={[CELL, CELL, 0.12]}
+            radius={0.045}
+            smoothness={3}
+            position={[x, y, 0]}
+          >
+            <meshStandardMaterial {...(isHoliday ? accentMat : inkMat)} />
+          </RoundedBox>
         );
       })}
+    </group>
+  );
+}
+
+/** 쿵치따치: 귀여운 스네어 드럼 한 대와 스틱 — 스틱이 박자에 맞춰 번갈아 두드리고 드럼이 통통 튄다. */
+function SnareDrum({ reducedMotion }: { reducedMotion: boolean }) {
+  const group = useRef<THREE.Group>(null);
+  const body = useRef<THREE.Group>(null);
+  const lstick = useRef<THREE.Group>(null);
+  const rstick = useRef<THREE.Group>(null);
+  const BPM = 120;
+  useFrame((state) => {
+    if (reducedMotion) return;
+    const t = state.clock.elapsedTime;
+    const beat = (t * BPM) / 60;
+    const phase = beat - Math.floor(beat);
+    const hit = Math.max(0, 1 - phase * 5); // 박 시작에 순간적으로 1, 곧 0
+    const leftTurn = Math.floor(beat) % 2 === 0;
+    const g = group.current;
+    if (g) {
+      g.rotation.y = -0.35 + Math.sin(t * 0.3) * 0.16;
+      g.position.y = Math.sin(t * 0.9) * 0.05;
+    }
+    if (body.current) {
+      body.current.scale.y = 1 - hit * 0.1;
+      body.current.scale.x = 1 + hit * 0.05;
+      body.current.scale.z = 1 + hit * 0.05;
+    }
+    if (lstick.current) lstick.current.rotation.x = 0.55 + (leftTurn ? hit : 0) * 0.55;
+    if (rstick.current) rstick.current.rotation.x = 0.55 + (!leftTurn ? hit : 0) * 0.55;
+  });
+  return (
+    <group ref={group} rotation={[0.32, -0.35, 0]} scale={0.95}>
+      <group ref={body}>
+        {/* 셸 */}
+        <mesh>
+          <cylinderGeometry args={[0.82, 0.82, 0.58, 48]} />
+          <meshStandardMaterial {...accentMat} />
+        </mesh>
+        {/* 위·아래 드럼 헤드 */}
+        <mesh position={[0, 0.3, 0]}>
+          <cylinderGeometry args={[0.9, 0.9, 0.06, 48]} />
+          <meshStandardMaterial {...paperMat} />
+        </mesh>
+        <mesh position={[0, -0.3, 0]}>
+          <cylinderGeometry args={[0.9, 0.9, 0.06, 48]} />
+          <meshStandardMaterial {...paperMat} />
+        </mesh>
+        {/* 테(rim) */}
+        <mesh position={[0, 0.33, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.9, 0.05, 12, 48]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+        <mesh position={[0, -0.33, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.9, 0.05, 12, 48]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+        {/* 텐션 러그 */}
+        {Array.from({ length: 8 }, (_, i) => {
+          const a = (i / 8) * Math.PI * 2;
+          return (
+            <mesh key={i} position={[Math.cos(a) * 0.86, 0, Math.sin(a) * 0.86]}>
+              <boxGeometry args={[0.1, 0.34, 0.08]} />
+              <meshStandardMaterial {...inkMat} />
+            </mesh>
+          );
+        })}
+      </group>
+      {/* 스틱 두 자루 (손잡이 쪽을 피벗으로) */}
+      <group ref={lstick} position={[-0.42, 1.12, 0.15]} rotation={[0.55, 0, 0.3]}>
+        <mesh position={[0, -0.55, 0]}>
+          <cylinderGeometry args={[0.045, 0.03, 1.1, 16]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+        <mesh position={[0, -1.12, 0]}>
+          <sphereGeometry args={[0.06, 16, 16]} />
+          <meshStandardMaterial {...accentMat} />
+        </mesh>
+      </group>
+      <group ref={rstick} position={[0.42, 1.12, 0.15]} rotation={[0.55, 0, -0.3]}>
+        <mesh position={[0, -0.55, 0]}>
+          <cylinderGeometry args={[0.045, 0.03, 1.1, 16]} />
+          <meshStandardMaterial {...inkMat} />
+        </mesh>
+        <mesh position={[0, -1.12, 0]}>
+          <sphereGeometry args={[0.06, 16, 16]} />
+          <meshStandardMaterial {...accentMat} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -175,10 +316,12 @@ export function Artifact({
   reducedMotion: boolean;
 }) {
   switch (kind) {
-    case "ribbon":
-      return <Ribbon reducedMotion={reducedMotion} />;
-    case "rhythm":
-      return <Rhythm reducedMotion={reducedMotion} />;
+    case "sign":
+      return <SignPaper reducedMotion={reducedMotion} />;
+    case "calendar":
+      return <Calendar reducedMotion={reducedMotion} />;
+    case "snare":
+      return <SnareDrum reducedMotion={reducedMotion} />;
     case "cage":
       return <Cage reducedMotion={reducedMotion} />;
     default:
