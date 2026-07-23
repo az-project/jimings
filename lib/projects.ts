@@ -1,5 +1,11 @@
 export type ArtifactKind = "sign" | "calendar" | "snare" | "cage" | "prism";
 
+export interface ProjectMedia {
+  /** 스크럽용(전 프레임 키프레임) mp4 경로 */
+  src: string;
+  poster: string;
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -9,6 +15,8 @@ export interface Project {
   stack: string[];
   href?: string;
   artifact: ArtifactKind;
+  /** 섹션 배경에 스크롤 스크럽으로 재생되는 시네마틱 영상 (선택) */
+  media?: ProjectMedia;
 }
 
 // 여기에 제품을 추가하면 섹션·3D 아티팩트·스크롤 스테이션이 자동으로 늘어난다.
@@ -24,6 +32,10 @@ export const projects: Project[] = [
     stack: ["Next.js", "Supabase", "R2"],
     href: "https://www.seuk-seuk.com",
     artifact: "sign",
+    media: {
+      src: "/media/seukseuk-pen-signing-scrub.mp4",
+      poster: "/media/seukseuk-pen-signing-poster.jpg",
+    },
   },
   {
     id: "hudy",
@@ -46,6 +58,10 @@ export const projects: Project[] = [
     stack: ["iOS", "Android", "Audio DSP"],
     href: "https://apps.apple.com/kr/app/%EC%BF%B5%EC%B9%98%EB%94%B0%EC%B9%98/id6788377128",
     artifact: "snare",
+    media: {
+      src: "/media/kungchi-snare-slowmo-scrub.mp4",
+      poster: "/media/kungchi-snare-slowmo-poster.jpg",
+    },
   },
   {
     id: "oh-my-harness",

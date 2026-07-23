@@ -1,4 +1,5 @@
 import Scene from "@/components/Scene";
+import ScrubVideo from "@/components/ScrubVideo";
 import { projects } from "@/lib/projects";
 
 const jsonLd = {
@@ -59,6 +60,18 @@ export default function Home() {
             id={p.id}
             className={`panel project${i % 2 === 0 ? "" : " flip"}`}
           >
+            {p.media && (
+              <div
+                className={`mediaBackdrop${i % 2 === 0 ? "" : " flip"}`}
+                aria-hidden="true"
+              >
+                <ScrubVideo
+                  src={p.media.src}
+                  poster={p.media.poster}
+                  className="scrubVideo"
+                />
+              </div>
+            )}
             <div className="projectCard">
               <div className="meta">
                 <span className="status">{p.status}</span>
