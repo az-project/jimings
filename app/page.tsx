@@ -1,5 +1,6 @@
 import Scene from "@/components/Scene";
 import ScrubVideo from "@/components/ScrubVideo";
+import SectionRail from "@/components/SectionRail";
 import { projects } from "@/lib/projects";
 
 const jsonLd = {
@@ -12,7 +13,7 @@ const jsonLd = {
     email: "support@jimings.com",
     jobTitle: "Indie maker",
     description:
-      "앱과 웹 서비스를 만들어 직접 배포하는 메이커. 슥슥, 쿵치따치, oh-my-harness.",
+      "앱과 웹 서비스를 만들어 직접 배포하는 메이커. 슥슥, HuDy, 쿵치따치, oh-my-harness.",
     makesOffer: projects.map((p) => ({
       "@type": "Offer",
       itemOffered: {
@@ -32,6 +33,7 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Scene />
+      <div className="grain" aria-hidden="true" />
 
       <header className="siteHeader">
         <a href="#top" className="wordmark">
@@ -43,13 +45,15 @@ export default function Home() {
         </nav>
       </header>
 
+      <SectionRail />
+
       <main className="content" id="top">
         <section className="panel hero">
           <p className="eyebrow">Indie maker · Shipping log</p>
           <h1>JIMINGS</h1>
           <p className="lede">
             앱과 웹 서비스를 만들어 직접 배포합니다. 아래는 지금까지 세상에
-            내보낸 제품들입니다.
+            내보낸 제품 {projects.length}개입니다.
           </p>
           <p className="scrollHint">SCROLL ↓</p>
         </section>
@@ -60,28 +64,26 @@ export default function Home() {
             id={p.id}
             className={`panel project${i % 2 === 0 ? "" : " flip"}`}
           >
-            {p.media && (
-              <div
-                className={`mediaBackdrop${i % 2 === 0 ? "" : " flip"}`}
-                aria-hidden="true"
-              >
-                <ScrubVideo
-                  src={p.media.src}
-                  poster={p.media.poster}
-                  className="scrubVideo"
-                />
-              </div>
-            )}
-            <div className="projectCard">
-              <div className="meta">
-                <span className="status">{p.status}</span>
-                {p.stack.map((s) => (
-                  <span key={s}>{s}</span>
-                ))}
-              </div>
+            <article className="projectCard">
+              <p className="cardIndex">
+                {String(i + 1).padStart(2, "0")}
+                <span>/{String(projects.length).padStart(2, "0")}</span>
+              </p>
               <h2>{p.name}</h2>
               <p className="tagline">{p.tagline}</p>
               <p className="desc">{p.description}</p>
+
+              <dl className="spec">
+                <div>
+                  <dt>상태</dt>
+                  <dd className="live">{p.status}</dd>
+                </div>
+                <div>
+                  <dt>기술</dt>
+                  <dd>{p.stack.join(" · ")}</dd>
+                </div>
+              </dl>
+
               {p.href && (
                 <a
                   className="visit"
@@ -89,12 +91,25 @@ export default function Home() {
                   target={p.href.startsWith("http") ? "_blank" : undefined}
                   rel="noreferrer"
                 >
-                  제품 보러 가기 →
+                  제품 보러 가기 <span aria-hidden="true">→</span>
                 </a>
               )}
-            </div>
+            </article>
           </section>
         ))}
+
+        <section className="panel showcase">
+          <ScrubVideo
+            src="/media/jimings-blue-flow-scrub.mp4"
+            poster="/media/jimings-blue-flow-poster.jpg"
+            className="showcaseVideo"
+          />
+          <p className="showcaseLine">
+            아이디어는 배포되어야
+            <br />
+            제품이 됩니다.
+          </p>
+        </section>
 
         <section className="panel contact" id="contact">
           <p className="eyebrow">Contact</p>
@@ -107,9 +122,10 @@ export default function Home() {
             support@jimings.com
           </a>
           <p className="note">새 제품은 이 페이지에 계속 추가됩니다.</p>
+          {/* 푸터는 컨택트 패널 안에 절대배치 — 문서 높이를 늘리면
+              스크롤 진행도가 카메라 스테이션과 어긋난다. */}
+          <footer className="siteFooter">© 2026 JIMINGS</footer>
         </section>
-
-        <footer className="siteFooter">© 2026 JIMINGS</footer>
       </main>
     </>
   );

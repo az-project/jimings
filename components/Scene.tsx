@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { ContactShadows } from "@react-three/drei";
 import * as THREE from "three";
 import { projects } from "@/lib/projects";
 import { bindInteraction, pointerState, scrollState } from "@/lib/interaction";
 import { Artifact, HeroStack } from "@/components/artifacts";
+import Studio from "@/components/Studio";
 
 const BG = "#f7f7f5";
 const SPACING = 10;
@@ -20,9 +22,15 @@ function smoothstep(t: number): number {
   return t * t * (3 - 2 * t);
 }
 
+/**
+ * 스크롤 스테이션 수 = 히어로 + 제품 n개 + 쇼케이스 + 컨택트.
+ * 페이지의 패널 수와 반드시 같아야 카메라가 섹션과 어긋나지 않는다.
+ */
+const STATION_COUNT = projects.length + 3;
+
 /** 아티팩트 i가 화면 중앙에 오는 스크롤 진행도(0~1). */
 function centerProgress(i: number): number {
-  return (i + 1) / (projects.length + 1);
+  return (i + 1) / (STATION_COUNT - 1);
 }
 
 /**
@@ -89,8 +97,12 @@ function CameraRig({
       look.push(new THREE.Vector3(a.x * 0.55, 0.05, a.z));
     });
     const endZ = -(projects.length + 1) * SPACING;
-    pos.push(new THREE.Vector3(0, 5.5, endZ + 14));
-    look.push(new THREE.Vector3(0.8, -0.4, endZ + 4));
+    // 쇼케이스(풀블리드 영상) — 화면은 영상이 덮으므로 카메라는 조용히 전진만 한다.
+    pos.push(new THREE.Vector3(0, 1.4, endZ + 15));
+    look.push(new THREE.Vector3(0, 0.4, endZ + 7));
+    // 컨택트 — 위로 빠지며 코리도어를 내려다본다.
+    pos.push(new THREE.Vector3(0, 5.5, endZ + 11));
+    look.push(new THREE.Vector3(0.8, -0.4, endZ + 1));
     return { pos, look };
   }, [lateral]);
 
@@ -139,11 +151,12 @@ function World({ reducedMotion }: { reducedMotion: boolean }) {
 
   return (
     <>
-      <fog attach="fog" args={[BG, 7, 19]} />
-      <ambientLight intensity={0.55} />
-      <hemisphereLight args={["#ffffff", "#c9c9c4", 1.1]} />
-      <directionalLight position={[4, 6, 5]} intensity={2.2} />
-      <directionalLight position={[-5, 2, -3]} intensity={0.8} />
+      {/* 다음 제품이 멀리서 미리 보이지 않도록 안개를 조인다 */}
+      <fog attach="fog" args={[BG, 7, 15.5]} />
+      <Studio />
+      <ambientLight intensity={0.35} />
+      {/* 그림자를 만드는 유일한 광원 — 스튜디오 키라이트 방향과 맞춘다 */}
+      <directionalLight position={[3, 7, 4]} intensity={1.1} />
 
       <group
         position={narrow ? [0, 1.15, 0] : [2.0, 0, 0]}
@@ -151,17 +164,40 @@ function World({ reducedMotion }: { reducedMotion: boolean }) {
       >
         <HeroStack reducedMotion={reducedMotion} />
       </group>
-      {projects.map((p, i) => (
-        <RevealGroup
-          key={p.id}
-          center={centerProgress(i)}
-          position={artifactPosition(i, lateral)}
-          baseScale={scale * 0.85}
-          reducedMotion={reducedMotion}
-        >
-          <Artifact kind={p.artifact} reducedMotion={reducedMotion} />
-        </RevealGroup>
-      ))}
+      <ContactShadows
+        position={narrow ? [0, 0.2, 0] : [2.0, -0.95, 0]}
+        scale={5 * scale}
+        resolution={256}
+        opacity={0.38}
+        blur={2.4}
+        far={2.6}
+        color="#1b1d24"
+      />
+      {projects.map((p, i) => {
+        const pos = artifactPosition(i, lateral);
+        return (
+          <group key={p.id}>
+            <RevealGroup
+              center={centerProgress(i)}
+              position={pos}
+              baseScale={scale * 0.85}
+              reducedMotion={reducedMotion}
+            >
+              <Artifact kind={p.artifact} reducedMotion={reducedMotion} />
+            </RevealGroup>
+            {/* 접지 그림자 — 오브젝트가 공중에 붕 뜨지 않고 무게를 갖는다 */}
+            <ContactShadows
+              position={[pos.x, pos.y - 1.75 * scale, pos.z]}
+              scale={7 * scale}
+              resolution={256}
+              opacity={0.42}
+              blur={2.6}
+              far={3.2}
+              color="#1b1d24"
+            />
+          </group>
+        );
+      })}
       <CameraRig lateral={lateral} reducedMotion={reducedMotion} />
     </>
   );

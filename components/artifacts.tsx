@@ -11,9 +11,25 @@ export const INK = "#16181d";
 export const ACCENT = "#2b3cf0";
 export const MUTE = "#9aa0a8";
 
-const inkMat = { color: "#262b34", roughness: 0.32, metalness: 0.1 };
-const accentMat = { color: ACCENT, roughness: 0.28, metalness: 0.05 };
-const paperMat = { color: "#f4f4f1", roughness: 0.68, metalness: 0.0 };
+// 스튜디오 환경맵(components/Studio.tsx)이 있어야 이 값들이 제대로 산다.
+const inkMat = {
+  color: "#20242c",
+  roughness: 0.26,
+  metalness: 0.42,
+  envMapIntensity: 1.15,
+};
+const accentMat = {
+  color: ACCENT,
+  roughness: 0.2,
+  metalness: 0.18,
+  envMapIntensity: 1.35,
+};
+const paperMat = {
+  color: "#f6f6f3",
+  roughness: 0.78,
+  metalness: 0.0,
+  envMapIntensity: 0.8,
+};
 
 /** 히어로: 쌓아 올린 세 장의 슬래브 — 커서를 따라 부채꼴로 기울어진다. */
 export function HeroStack({ reducedMotion }: { reducedMotion: boolean }) {

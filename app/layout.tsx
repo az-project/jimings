@@ -17,7 +17,7 @@ const jetbrains = JetBrains_Mono({
 const SITE_URL = "https://www.jimings.com";
 const TITLE = "JIMINGS — 만들고, 배포합니다";
 const DESCRIPTION =
-  "앱과 웹 서비스를 만들어 직접 배포하는 메이커 JIMINGS의 제품 기록. 슥슥, 쿵치따치, oh-my-harness.";
+  "앱과 웹 서비스를 만들어 직접 배포하는 메이커 JIMINGS의 제품 기록. 슥슥, HuDy, 쿵치따치, oh-my-harness.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -34,6 +34,7 @@ export const metadata: Metadata = {
     "인디 메이커",
     "개발자 포트폴리오",
     "슥슥",
+    "HuDy",
     "쿵치따치",
     "oh-my-harness",
   ],

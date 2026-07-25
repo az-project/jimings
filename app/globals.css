@@ -3,7 +3,7 @@
   --ink: #16181d;
   --accent: #2b3cf0;
   --mute: #8a8f98;
-  --hairline: rgba(22, 24, 29, 0.12);
+  --hairline: rgba(22, 24, 29, 0.14);
 
   --font-body: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
 }
@@ -32,6 +32,8 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* 한국어는 음절이 아니라 어절 단위로 줄바꿈해야 읽힌다 */
+  word-break: keep-all;
 }
 
 a {
@@ -59,6 +61,18 @@ button:focus-visible {
   z-index: 0;
 }
 
+/* ---- 필름 그레인 ---- *
+ * 3D 렌더와 실사 영상을 같은 질감으로 묶어주는 얇은 노이즈 레이어.
+ */
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 /* ---- 오버레이 콘텐츠 ---- */
 
 .content {
@@ -76,7 +90,7 @@ button:focus-visible {
 
 .siteHeader {
   position: fixed;
-  z-index: 2;
+  z-index: 20;
   top: 0;
   left: 0;
   right: 0;
@@ -87,6 +101,7 @@ button:focus-visible {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.08em;
+  mix-blend-mode: multiply;
 }
 
 .siteHeader .wordmark {
@@ -106,13 +121,100 @@ button:focus-visible {
   color: var(--accent);
 }
 
+/* ---- 좌측 인덱스 레일 ---- */
+
+.rail {
+  position: fixed;
+  z-index: 20;
+  left: clamp(20px, 4vw, 48px);
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  mix-blend-mode: multiply;
+}
+
+.rail ol {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 제품 구간에서만 나타난다 — 히어로·쇼케이스 위에 겹치지 않게 */
+.rail {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.rail:has(li.on) {
+  opacity: 1;
+}
+
+.rail a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  color: var(--mute);
+  transition: color 0.3s;
+}
+
+.rail .num {
+  position: relative;
+  padding-left: 22px;
+}
+
+/* 현재 위치를 가리키는 눈금 */
+.rail .num::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 14px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0.45);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+/* 절대배치라 레일의 폭을 넓히지 않는다 (본문과 충돌 방지) */
+.rail .label {
+  position: absolute;
+  left: 100%;
+  margin-left: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.rail li.on a {
+  color: var(--accent);
+}
+
+.rail li.on .num::before {
+  transform: scaleX(1);
+}
+
+.rail li.on .label,
+.rail a:hover .label {
+  opacity: 1;
+  transform: none;
+}
+
+.rail a:hover {
+  color: var(--ink);
+}
+
 /* ---- 공통 섹션 ---- */
 
 .panel {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  padding: 0 clamp(20px, 6vw, 96px);
+  padding: 0 clamp(20px, 6vw, 110px);
 }
 
 .eyebrow {
@@ -125,7 +227,7 @@ button:focus-visible {
 
 /* ---- 히어로 ---- */
 
-.hero {
+.panel.hero {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
@@ -136,20 +238,19 @@ button:focus-visible {
   font-family: var(--font-display);
   font-stretch: 125%;
   font-weight: 700;
-  font-size: clamp(58px, 12vw, 168px);
-  line-height: 0.95;
-  letter-spacing: -0.01em;
-  color: var(--ink);
+  font-size: clamp(58px, 13vw, 190px);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
 }
 
 .hero .lede {
-  max-width: 30em;
+  max-width: 27em;
   font-size: clamp(16px, 1.6vw, 20px);
-  color: var(--ink);
+  text-wrap: balance;
 }
 
 .hero .scrollHint {
-  margin-top: 8vh;
+  margin-top: 7vh;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.12em;
@@ -159,7 +260,6 @@ button:focus-visible {
 /* ---- 제품 패널 ---- */
 
 .panel.project {
-  position: relative;
   justify-content: flex-start;
 }
 
@@ -167,119 +267,89 @@ button:focus-visible {
   justify-content: flex-end;
 }
 
-/* 스크롤 스크럽 시네마틱 배경 — 텍스트 쪽 절반에만 얹히고 3D 아티팩트 쪽으로는 사라진다 */
-.mediaBackdrop {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 0.45;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.6) 34%,
-    transparent 58%
-  );
-  mask-image: linear-gradient(
-    to right,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.6) 34%,
-    transparent 58%
-  );
-}
-
-.mediaBackdrop.flip {
-  -webkit-mask-image: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.6) 34%,
-    transparent 58%
-  );
-  mask-image: linear-gradient(
-    to left,
-    rgba(0, 0, 0, 0.9) 0%,
-    rgba(0, 0, 0, 0.6) 34%,
-    transparent 58%
-  );
-}
-
-.mediaBackdrop .scrubVideo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 위아래 가장자리를 종이색으로 녹인다 */
-.mediaBackdrop::before,
-.mediaBackdrop::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 22%;
-  z-index: 1;
-}
-
-.mediaBackdrop::before {
-  top: 0;
-  background: linear-gradient(to bottom, var(--paper), transparent);
-}
-
-.mediaBackdrop::after {
-  bottom: 0;
-  background: linear-gradient(to top, var(--paper), transparent);
-}
-
 .projectCard {
   position: relative;
   z-index: 1;
-  max-width: 460px;
+  width: min(440px, 100%);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: flex-start;
   pointer-events: auto;
 }
 
-.projectCard .meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
+.cardIndex {
   font-family: var(--font-mono);
   font-size: 12px;
-  letter-spacing: 0.1em;
-  color: var(--mute);
-}
-
-.projectCard .meta .status {
+  letter-spacing: 0.12em;
   color: var(--accent);
 }
 
+.cardIndex span {
+  color: var(--mute);
+}
+
 .projectCard h2 {
+  margin-top: 14px;
   font-family: var(--font-display), var(--font-body);
   font-stretch: 118%;
   font-weight: 700;
-  font-size: clamp(34px, 4.4vw, 54px);
-  line-height: 1.08;
+  font-size: clamp(38px, 5vw, 62px);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
 }
 
 .projectCard .tagline {
+  margin-top: 10px;
   font-size: clamp(17px, 1.7vw, 21px);
   font-weight: 600;
 }
 
 .projectCard .desc {
-  color: rgba(22, 24, 29, 0.72);
+  margin-top: 12px;
+  color: rgba(22, 24, 29, 0.66);
+  text-wrap: pretty;
+}
+
+/* 스펙 시트 — 실제 운영 정보를 표로 박아 넣는다 */
+.spec {
+  margin-top: 26px;
+  width: 100%;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.spec > div {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.spec dt {
+  color: var(--mute);
+  letter-spacing: 0.12em;
+}
+
+.spec dd.live {
+  color: var(--accent);
 }
 
 .projectCard .visit {
-  margin-top: 6px;
-  align-self: flex-start;
+  margin-top: 26px;
   font-family: var(--font-mono);
   font-size: 13px;
   letter-spacing: 0.06em;
+  padding-bottom: 3px;
   border-bottom: 1px solid var(--ink);
-  padding-bottom: 2px;
   transition: color 0.2s, border-color 0.2s;
+}
+
+.projectCard .visit span {
+  display: inline-block;
+  transition: transform 0.25s;
 }
 
 .projectCard .visit:hover {
@@ -287,9 +357,59 @@ button:focus-visible {
   border-color: var(--accent);
 }
 
+.projectCard .visit:hover span {
+  transform: translateX(5px);
+}
+
+/* ---- 풀블리드 쇼케이스 ---- */
+
+.panel.showcase {
+  position: relative;
+  padding: 0;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.showcaseVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 글자가 항상 읽히도록 상단만 종이색으로 살짝 덮는다 */
+.panel.showcase::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 58%;
+  background: linear-gradient(
+    to bottom,
+    var(--paper) 12%,
+    rgba(247, 247, 245, 0.7) 45%,
+    transparent
+  );
+  z-index: 1;
+}
+
+.showcaseLine {
+  position: relative;
+  z-index: 2;
+  margin: clamp(80px, 14vh, 170px) 0 0 clamp(20px, 6vw, 110px);
+  font-family: var(--font-display), var(--font-body);
+  font-stretch: 118%;
+  font-weight: 700;
+  font-size: clamp(30px, 5.2vw, 68px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
 /* ---- 컨택트 ---- */
 
 .panel.contact {
+  position: relative;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -303,6 +423,7 @@ button:focus-visible {
   font-weight: 700;
   font-size: clamp(30px, 5vw, 64px);
   line-height: 1.15;
+  letter-spacing: -0.015em;
 }
 
 .contact .email {
@@ -323,6 +444,10 @@ button:focus-visible {
 }
 
 .siteFooter {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 28px;
   text-align: center;
   font-family: var(--font-mono);
@@ -331,29 +456,46 @@ button:focus-visible {
   color: var(--mute);
 }
 
-/* ---- 모바일 ---- */
+/* ---- 반응형 ---- */
 
-@media (max-width: 720px) {
-  .mediaBackdrop {
-    display: none;
+/* 레일이 서는 자리만큼 본문을 안쪽으로 들인다 */
+@media (min-width: 1101px) {
+  .panel {
+    padding-left: 168px;
   }
 
+  .showcaseLine {
+    margin-left: 168px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .rail {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
   .panel.project,
   .panel.project.flip {
     justify-content: center;
     align-items: flex-end;
-    padding-bottom: 9vh;
+    padding-bottom: 8vh;
   }
 
   .projectCard {
-    background: rgba(247, 247, 245, 0.82);
-    backdrop-filter: blur(6px);
-    padding: 18px;
-    border-radius: 12px;
+    background: rgba(247, 247, 245, 0.86);
+    backdrop-filter: blur(7px);
+    padding: 20px;
+    border-radius: 14px;
   }
 
-  .hero {
+  .panel.hero {
     justify-content: flex-end;
     padding-bottom: 12vh;
+  }
+
+  .showcaseLine {
+    margin-top: 12vh;
   }
 }
