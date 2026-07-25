@@ -9,7 +9,7 @@ const jsonLd = {
     "@type": "Person",
     name: "JIMINGS",
     url: "https://www.jimings.com",
-    email: "support.jimings@gmail.com",
+    email: "support@jimings.com",
     jobTitle: "Indie maker",
     description:
       "앱과 웹 서비스를 만들어 직접 배포하는 메이커. 슥슥, 쿵치따치, oh-my-harness.",
@@ -103,8 +103,8 @@ export default function Home() {
             <br />
             언제든지.
           </h2>
-          <a className="email" href="mailto:support.jimings@gmail.com">
-            support.jimings@gmail.com
+          <a className="email" href="mailto:support@jimings.com">
+            support@jimings.com
           </a>
           <p className="note">새 제품은 이 페이지에 계속 추가됩니다.</p>
         </section>
