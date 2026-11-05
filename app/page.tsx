@@ -13,7 +13,7 @@ const jsonLd = {
     email: "support@jimings.com",
     jobTitle: "Indie maker",
     description:
-      "앱과 웹 서비스를 만들어 직접 배포하는 메이커. 슥슥, HuDy, 쿵치따치, oh-my-harness.",
+      `앱과 웹 서비스를 만들어 직접 배포하는 메이커. ${projects.map((p) => p.name).join(", ")}.`,
     makesOffer: projects.map((p) => ({
       "@type": "Offer",
       itemOffered: {
@@ -124,7 +124,7 @@ export default function Home() {
           <p className="note">새 제품은 이 페이지에 계속 추가됩니다.</p>
           {/* 푸터는 컨택트 패널 안에 절대배치 — 문서 높이를 늘리면
               스크롤 진행도가 카메라 스테이션과 어긋난다. */}
-          <footer className="siteFooter">© 2026 JIMINGS</footer>
+          <footer className="siteFooter">© 2026 지밍스 (JIMINGS)</footer>
         </section>
       </main>
     </>

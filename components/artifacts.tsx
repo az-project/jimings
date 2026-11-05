@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { RoundedBox } from "@react-three/drei";
+import { Billboard, RoundedBox, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import type { ArtifactKind } from "@/lib/projects";
 import { pointerState } from "@/lib/interaction";
@@ -311,6 +311,72 @@ function Cage({ reducedMotion }: { reducedMotion: boolean }) {
   );
 }
 
+/** 젤리즈: 앱의 젤리 세 마리(탱글이·말랑이·쫀득이) 그림을 세우고, 젤리즈 웹과 같은 박자로 통통 뛴다.
+ *  그림은 젤리즈 웹(.trio img)의 CSS 필터를 구운 것이고, gap은 그림 아래 투명 여백(앱 Animal.bottomGap)이라 바닥선을 맞춘다. */
+const JELLY_ROW = [
+  { src: "/media/jellies/rabbit.png", x: -1.15, gap: 0.06 },
+  { src: "/media/jellies/cat.png", x: 0, gap: 0.14 },
+  { src: "/media/jellies/frog.png", x: 1.17, gap: 0.16 },
+];
+const JELLY_SIZE = 1.3;
+const JELLY_FLOOR = -0.6;
+// 젤리즈 웹 @keyframes hop(4.2초)과 같은 점프: [진행, 높이(크기 비율), 가로, 세로]
+const HOP = [
+  [0, 0, 1, 1], [0.3, 0, 1, 1], [0.36, 0, 1.12, 0.84], [0.44, 0.19, 0.94, 1.08],
+  [0.52, 0, 1.1, 0.9], [0.6, 0, 0.98, 1.02], [0.66, 0, 1, 1], [1, 0, 1, 1],
+];
+function hopAt(t: number) {
+  const k = HOP.findIndex((f) => f[0] > t);
+  const a = HOP[k - 1], b = HOP[k];
+  const u = (t - a[0]) / (b[0] - a[0]);
+  const e = u * u * (3 - 2 * u);
+  return a.map((v, i) => v + (b[i] - v) * e);
+}
+
+function JellyRow({ reducedMotion }: { reducedMotion: boolean }) {
+  const maps = useTexture(JELLY_ROW.map((j) => j.src), (ts) => {
+    (Array.isArray(ts) ? ts : [ts]).forEach((m) => (m.colorSpace = THREE.SRGBColorSpace));
+  });
+  const refs = useRef<(THREE.Group | null)[]>([]);
+  useFrame((state) => {
+    const time = state.clock.elapsedTime;
+    JELLY_ROW.forEach((_, i) => {
+      const g = refs.current[i];
+      if (!g) return;
+      const local = time - 1.2 - i * 0.2;   // 웹과 같은 시작 지연(1.2·1.4·1.6초)
+      const [, h, sx, sy] = reducedMotion || local < 0 ? HOP[0] : hopAt((local % 4.2) / 4.2);
+      g.position.y = JELLY_FLOOR + h * JELLY_SIZE;
+      g.scale.set(sx, sy, 1);
+    });
+  });
+  return (
+    <Billboard>
+      {JELLY_ROW.map((j, i) => (
+        <group
+          key={j.src}
+          ref={(g) => {
+            refs.current[i] = g;
+          }}
+          position={[j.x, JELLY_FLOOR, 0]}
+        >
+          <mesh position={[0, JELLY_SIZE * (0.5 - j.gap), 0]}>
+            <planeGeometry args={[JELLY_SIZE, JELLY_SIZE]} />
+            <meshBasicMaterial map={maps[i]} transparent depthWrite={false} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+    </Billboard>
+  );
+}
+
+function Jellies({ reducedMotion }: { reducedMotion: boolean }) {
+  return (
+    <Suspense fallback={null}>
+      <JellyRow reducedMotion={reducedMotion} />
+    </Suspense>
+  );
+}
+
 /** 기본 아티팩트: 새 제품이 아직 형태를 정하지 않았을 때. */
 function Prism({ reducedMotion }: { reducedMotion: boolean }) {
   const mesh = useRef<THREE.Mesh>(null);
@@ -342,6 +408,8 @@ export function Artifact({
       return <SnareDrum reducedMotion={reducedMotion} />;
     case "cage":
       return <Cage reducedMotion={reducedMotion} />;
+    case "jelly":
+      return <Jellies reducedMotion={reducedMotion} />;
     default:
       return <Prism reducedMotion={reducedMotion} />;
   }

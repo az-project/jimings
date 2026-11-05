@@ -1,4 +1,4 @@
-export type ArtifactKind = "sign" | "calendar" | "snare" | "cage" | "prism";
+export type ArtifactKind = "sign" | "calendar" | "snare" | "cage" | "jelly" | "prism";
 
 export interface Project {
   id: string;
@@ -14,7 +14,7 @@ export interface Project {
 }
 
 // 여기에 제품을 추가하면 섹션·3D 아티팩트·스크롤 스테이션이 자동으로 늘어난다.
-// artifact 종류: sign(문서+서명) · calendar(공휴일 그리드) · snare(스네어+스틱) · cage(가드레일 케이지) · prism(기본)
+// artifact 종류: sign(문서+서명) · calendar(공휴일 그리드) · snare(스네어+스틱) · cage(가드레일 케이지) · jelly(젤리즈 젤리 그림 세 장) · prism(기본)
 export const projects: Project[] = [
   {
     id: "seukseuk",
@@ -59,5 +59,16 @@ export const projects: Project[] = [
     stack: ["TypeScript", "Node.js"],
     href: "https://github.com/kyu1204/oh-my-harness",
     artifact: "cage",
+  },
+  {
+    id: "jellies",
+    name: "젤리즈",
+    tagline: "흩어진 경제 소식을 한 손에 모아 주는 iOS 앱",
+    description:
+      "관심 종목의 공시와 뉴스, 시장 일정을 젤리 세 마리가 밤새 주워 와 아침에 골라 준다. 룰은 말로 걸고, 돈은 절대 움직이지 않는다.",
+    status: "iOS 베타 · 출시 준비 중",
+    stack: ["iOS", "Supabase", "AI 에이전트"],
+    href: "https://jellies.jimings.com",
+    artifact: "jelly",
   },
 ];
