@@ -263,6 +263,20 @@ button:focus-visible {
   color: var(--mute);
 }
 
+/* 아이폰에서만 보이는 기울기 권한 버튼. 스크롤 안내 옆에 같은 글씨로, 손가락이 닿는 높이만 키운다 */
+.tiltHint {
+  margin: -12px 0 -12px 20px;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
 /* ---- 제품 패널 ---- */
 
 .panel.project {
