@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 /**
  * 스크롤 위치에 따라 영상을 재생/되감기하는 배경 비디오.
  * - 데스크톱: 섹션 통과 진행도를 currentTime에 매핑 (rAF 스무딩)
- * - 터치 기기: 그냥 무음 루프 재생 (스크럽은 모바일 사파리에서 불안정)
+ * - 터치 기기: 보일 때만 무음 루프 재생 (스크럽은 모바일 사파리에서 불안정)
  * - prefers-reduced-motion: 포스터 프레임 정지
  * 소스는 전 프레임 키프레임(-g 1)으로 인코딩되어 있어야 부드럽다.
  */
@@ -28,8 +28,13 @@ export default function ScrubVideo({
     if (window.matchMedia("(pointer: coarse)").matches) {
       video.muted = true;
       video.loop = true;
-      video.play().catch(() => {});
-      return;
+      // 화면에 보일 때만 재생한다(안 보이는 동안 디코딩하지 않게)
+      const io = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {});
+        else video.pause();
+      });
+      io.observe(video);
+      return () => io.disconnect();
     }
 
     let raf = 0;

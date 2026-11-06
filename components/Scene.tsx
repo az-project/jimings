@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows } from "@react-three/drei";
+import { ContactShadows, PerformanceMonitor } from "@react-three/drei";
 import * as THREE from "three";
 import { projects } from "@/lib/projects";
 import { bindInteraction, pointerState, scrollState } from "@/lib/interaction";
@@ -74,6 +74,23 @@ function RevealGroup({
       <group ref={inner}>{children}</group>
     </group>
   );
+}
+
+/**
+ * 접지 그림자는 그림자 하나마다 장면을 한 번 더 그리고 네 번 흐린다(프레임당 패스 5번).
+ * 카메라 앞 제품 것만 매 프레임 그리고, 나머지는 마지막 모습으로 멈춰 둔다(frames=1은 다시 그려질 때 한 번 더 그리고 멈춘다).
+ */
+function Shadow({ center, ...props }: { center: number } & React.ComponentProps<typeof ContactShadows>) {
+  const [live, setLive] = useState(false);
+  const on = useRef(false);
+  useFrame(() => {
+    const v = Math.abs(scrollState.progress - center) < 0.1;   // 스테이션 간격(1/7)보다 좁게: 멈춰 있을 땐 하나, 넘어가는 동안만 둘
+    if (v !== on.current) {
+      on.current = v;
+      setLive(v);
+    }
+  });
+  return <ContactShadows frames={live ? Infinity : 1} {...props} />;
 }
 
 function CameraRig({
@@ -164,7 +181,8 @@ function World({ reducedMotion }: { reducedMotion: boolean }) {
       >
         <HeroStack reducedMotion={reducedMotion} />
       </group>
-      <ContactShadows
+      <Shadow
+        center={0}
         position={narrow ? [0, 0.2, 0] : [2.0, -0.95, 0]}
         scale={5 * scale}
         resolution={256}
@@ -186,7 +204,8 @@ function World({ reducedMotion }: { reducedMotion: boolean }) {
               <Artifact kind={p.artifact} reducedMotion={reducedMotion} />
             </RevealGroup>
             {/* 접지 그림자 — 오브젝트가 공중에 붕 뜨지 않고 무게를 갖는다 */}
-            <ContactShadows
+            <Shadow
+              center={centerProgress(i)}
               position={[pos.x, pos.y - 1.75 * scale, pos.z]}
               scale={7 * scale}
               resolution={256}
@@ -205,6 +224,7 @@ function World({ reducedMotion }: { reducedMotion: boolean }) {
 
 export default function Scene() {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [maxDpr, setMaxDpr] = useState(2);
 
   useEffect(() => {
     const unbind = bindInteraction();
@@ -221,10 +241,13 @@ export default function Scene() {
   return (
     <div className="scene" aria-hidden="true">
       <Canvas
-        dpr={[1, 2]}
-        camera={{ fov: 42, position: [0, 0.35, 5.4], near: 0.1, far: 60 }}
+        dpr={[1, maxDpr]}
+        // 안개(7~15.5)가 다 덮은 뒤로는 그리지 않는다. 멀리 있는 제품까지 그리면 폰 GPU가 헛일을 한다
+        camera={{ fov: 42, position: [0, 0.35, 5.4], near: 0.1, far: 16 }}
         gl={{ antialias: true, alpha: true }}
       >
+        {/* 2초 넘게 초당 40프레임을 못 내는 기기(느린 폰·저전력 모드)만 해상도를 1배로 내린다. 잘 도는 기기는 그대로 */}
+        <PerformanceMonitor onDecline={() => setMaxDpr(1)} />
         <World reducedMotion={reducedMotion} />
       </Canvas>
     </div>

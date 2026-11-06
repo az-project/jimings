@@ -55,22 +55,28 @@ button:focus-visible {
 
 /* ---- 3D 캔버스 ---- */
 
+/* 높이는 가장 큰 화면 높이로 고정한다. inset: 0이면 폰 주소창이 접혔다 펴질 때마다 캔버스 크기가 바뀌고, 그때마다 WebGL 버퍼를 다시 잡느라 끊긴다 */
 .scene {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
   z-index: 0;
 }
 
 /* ---- 필름 그레인 ---- *
  * 3D 렌더와 실사 영상을 같은 질감으로 묶어주는 얇은 노이즈 레이어.
+ * 200px 타일을 반복한다. 화면 크기 한 장(예전엔 화면 4배)으로 그리면 폰에서 큰 노이즈를 래스터해 들고 있는다.
  */
 .grain {
   position: fixed;
-  inset: -50%;
+  inset: 0;
   z-index: 40;
   pointer-events: none;
   opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ---- 오버레이 콘텐츠 ---- */
