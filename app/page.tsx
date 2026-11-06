@@ -1,7 +1,6 @@
 import Scene from "@/components/Scene";
 import ScrubVideo from "@/components/ScrubVideo";
 import SectionRail from "@/components/SectionRail";
-import TiltButton from "@/components/TiltButton";
 import { projects } from "@/lib/projects";
 
 const jsonLd = {
@@ -56,9 +55,7 @@ export default function Home() {
             앱과 웹 서비스를 만들어 직접 배포합니다. 아래는 지금까지 세상에
             내보낸 제품 {projects.length}개입니다.
           </p>
-          <p className="scrollHint">
-            SCROLL ↓<TiltButton />
-          </p>
+          <p className="scrollHint">SCROLL ↓</p>
         </section>
 
         {projects.map((p, i) => (

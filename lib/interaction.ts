@@ -23,16 +23,14 @@ function onTilt(e: DeviceOrientationEvent) {
 }
 
 /**
- * 기울기를 켠다. 켜졌으면 true.
- * 탭 밖에서 부르면 이미 허락된 곳(안드로이드 크롬, 이번에 허락한 아이폰)만 켜지고,
- * 아이폰 사파리 첫 방문은 거절된다. 탭 안에서 다시 부르면 그때 묻는 창이 뜬다
+ * 기울기를 켠다. 묻지 않고 허락하는 곳(안드로이드 크롬 등)만 켜진다.
+ * 아이폰 사파리는 탭 안에서만 권한을 물을 수 있어 여기서는 거절되고 꺼진 채로 둔다(버튼은 두지 않는다)
  */
-export async function startTilt(): Promise<boolean> {
+async function startTilt() {
   const D = window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> } | undefined;
-  if (!D) return false;
+  if (!D) return;
   const on = !D.requestPermission || (await D.requestPermission().catch(() => "denied")) === "granted";
   if (on) window.addEventListener("deviceorientation", onTilt);
-  return on;
 }
 
 export function bindInteraction(): () => void {
@@ -49,9 +47,11 @@ export function bindInteraction(): () => void {
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll);
   window.addEventListener("pointermove", onPointer, { passive: true });
+  if (window.matchMedia("(pointer: coarse)").matches) startTilt();
   return () => {
     window.removeEventListener("scroll", onScroll);
     window.removeEventListener("resize", onScroll);
     window.removeEventListener("pointermove", onPointer);
+    window.removeEventListener("deviceorientation", onTilt);
   };
 }
