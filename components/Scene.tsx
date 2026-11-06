@@ -113,7 +113,9 @@ function CameraRig({
       pos.push(new THREE.Vector3(a.x * 0.25, 0.35, a.z + 5.4));
       look.push(new THREE.Vector3(a.x * 0.55, 0.05, a.z));
     });
-    const endZ = -(projects.length + 1) * SPACING;
+    // 마지막 제품 한 칸 너머. 다른 제품처럼 마지막 것도 카메라가 지나쳐 가야 한다.
+    // 그 앞에 멈추면 쇼케이스 영상이 위로 걷힐 때 그 제품이 화면 구석에 남아 보인다
+    const endZ = -(projects.length + 2) * SPACING;
     // 쇼케이스(풀블리드 영상) — 화면은 영상이 덮으므로 카메라는 조용히 전진만 한다.
     pos.push(new THREE.Vector3(0, 1.4, endZ + 15));
     look.push(new THREE.Vector3(0, 0.4, endZ + 7));
