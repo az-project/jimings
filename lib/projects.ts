@@ -66,7 +66,7 @@ export const projects: Project[] = [
     tagline: "흩어진 경제 소식을 한 손에 모아 주는 iOS 앱",
     description:
       "관심 종목의 공시와 뉴스, 시장 일정을 젤리 세 마리가 밤새 주워 와 아침에 골라 준다. 룰은 말로 걸고, 돈은 절대 움직이지 않는다.",
-    status: "iOS 베타 · 출시 준비 중",
+    status: "iOS 출시",
     stack: ["iOS", "Supabase", "AI 에이전트"],
     href: "https://jellies.jimings.com",
     artifact: "jelly",
